@@ -1,5 +1,5 @@
 import { getCertificateData } from "@/lib/assets";
-import CertificateStudio from "@/app/components/CertificateStudio";
+import CertificateStudio from "@/app/components/layout/CertificateStudio";
 
 export const dynamic = "force-dynamic";
 

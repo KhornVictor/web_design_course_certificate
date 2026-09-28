@@ -5,6 +5,7 @@ export async function downloadCertificatePNG(
   student: Student,
   assets: CertificateAssets,
   options: {
+    certificateTitle?: string;
     programTitle?: string;
     signatoryName?: string;
     signatoryRole?: string;
@@ -12,10 +13,11 @@ export async function downloadCertificatePNG(
   } = {}
 ) {
   const {
-    programTitle = "GIC Vacation Crash Course 2024",
-    signatoryName = "Ms. SEAK Leng",
-    signatoryRole = "Deputy Head of the Department of GIC",
-    locationText = "Phnom Penh, Cambodia",
+    certificateTitle = assets.config?.name || "CERTIFICATE OF COMPLETION",
+    programTitle = assets.config?.for || "GIC Crash Course 2026",
+    signatoryName = assets.config?.signature || "Mrs. Seak Leng",
+    signatoryRole = assets.config?.role || "Deputy Head of the Department of GIC",
+    locationText = assets.config?.location || "Phnom Penh, Cambodia",
   } = options;
 
   const dateInfo = formatCertificateDates(student.start_date, student.completion_date);
@@ -155,39 +157,46 @@ export async function downloadCertificatePNG(
     ctx.fillText("Nation, Religion, King", centerX, innerY + 160);
 
     // Decorative Flourish Divider
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.moveTo(centerX - 190, innerY + 195);
-    ctx.quadraticCurveTo(centerX - 80, innerY + 190, centerX - 30, innerY + 195);
-    ctx.stroke();
+    if (assets.ornamentalRule) {
+      const ornImg = await loadImage(assets.ornamentalRule);
+      const ornW = 280;
+      const ornH = (ornImg.naturalHeight / ornImg.naturalWidth) * ornW;
+      ctx.drawImage(ornImg, centerX - ornW / 2, innerY + 175, ornW, ornH);
+    } else {
+      ctx.strokeStyle = "#000000";
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(centerX - 190, innerY + 195);
+      ctx.quadraticCurveTo(centerX - 80, innerY + 190, centerX - 30, innerY + 195);
+      ctx.stroke();
 
-    ctx.beginPath();
-    ctx.moveTo(centerX + 30, innerY + 195);
-    ctx.quadraticCurveTo(centerX + 80, innerY + 190, centerX + 190, innerY + 195);
-    ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(centerX + 30, innerY + 195);
+      ctx.quadraticCurveTo(centerX + 80, innerY + 190, centerX + 190, innerY + 195);
+      ctx.stroke();
 
-    // Center circle & flanking beads
-    ctx.fillStyle = "#000000";
-    ctx.beginPath();
-    ctx.arc(centerX, innerY + 195, 7.5, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "#ffffff";
-    ctx.beginPath();
-    ctx.arc(centerX, innerY + 195, 3.5, 0, Math.PI * 2);
-    ctx.fill();
+      // Center circle & flanking beads
+      ctx.fillStyle = "#000000";
+      ctx.beginPath();
+      ctx.arc(centerX, innerY + 195, 7.5, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(centerX, innerY + 195, 3.5, 0, Math.PI * 2);
+      ctx.fill();
 
-    ctx.fillStyle = "#000000";
-    ctx.beginPath();
-    ctx.arc(centerX - 18, innerY + 195, 4.5, 0, Math.PI * 2);
-    ctx.arc(centerX + 18, innerY + 195, 4.5, 0, Math.PI * 2);
-    ctx.fill();
+      ctx.fillStyle = "#000000";
+      ctx.beginPath();
+      ctx.arc(centerX - 18, innerY + 195, 4.5, 0, Math.PI * 2);
+      ctx.arc(centerX + 18, innerY + 195, 4.5, 0, Math.PI * 2);
+      ctx.fill();
+    }
 
     // 6. CERTIFICATE OF COMPLETION: #005d9e in Times New Roman Bold
     setSpacing("5px");
     ctx.font = "bold 65px 'Times New Roman', serif";
     ctx.fillStyle = "#005d9e";
-    ctx.fillText("CERTIFICATE OF COMPLETION", centerX, innerY + 415);
+    ctx.fillText(certificateTitle.toUpperCase(), centerX, innerY + 415);
 
     // 7. Subheading: Italic Times New Roman
     setSpacing("1px");
@@ -220,7 +229,10 @@ export async function downloadCertificatePNG(
 
     // 10. Date & Location: Italic
     ctx.font = "italic 400 25px 'Times New Roman', serif";
-    const dateText = `From ${dateInfo.startDay}${dateInfo.startSuffix} ${dateInfo.startMonth} to ${dateInfo.endDay}${dateInfo.endSuffix} ${dateInfo.endMonth} ${dateInfo.endYear}, ${locationText}.`;
+    const dateText =
+      dateInfo.startMonth === dateInfo.endMonth && dateInfo.startYear === dateInfo.endYear
+        ? `From ${dateInfo.startDay}${dateInfo.startSuffix} to ${dateInfo.endDay}${dateInfo.endSuffix} ${dateInfo.endMonth} ${dateInfo.endYear}, ${locationText}.`
+        : `From ${dateInfo.startDay}${dateInfo.startSuffix} ${dateInfo.startMonth} to ${dateInfo.endDay}${dateInfo.endSuffix} ${dateInfo.endMonth} ${dateInfo.endYear}, ${locationText}.`;
     ctx.fillText(dateText, centerX, innerY + 890);
 
     // 11. Signature Section (Bottom Right - NO divider line, exact signature position)
