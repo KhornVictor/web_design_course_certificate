@@ -178,19 +178,19 @@ export async function downloadCertificatePNG(
     ctx.font = `bold ${Math.round(3.8 * cqw)}px 'Times New Roman', Times, serif`;
     ctx.fillStyle = "#004a99";
     ctx.textAlign = "center";
-    ctx.fillText(certificateTitle.toUpperCase(), centerX, 745);
+    ctx.fillText(certificateTitle.toUpperCase(), centerX, 795);
 
     // Subtitle: This certificate is proudly awarded to
     setLetterSpacing("0px");
     ctx.font = `italic 400 ${Math.round(1.6 * cqw)}px 'Times New Roman', Times, serif`;
     ctx.fillStyle = "#555555";
-    ctx.fillText("This certificate is proudly awarded to", centerX, 825);
+    ctx.fillText("This certificate is proudly awarded to", centerX, 875);
 
     // Recipient Name
     setLetterSpacing("4px");
     ctx.font = `bold ${Math.round(3.0 * cqw)}px 'Times New Roman', Times, serif`;
     ctx.fillStyle = "#004a99";
-    ctx.fillText(recipientName.toUpperCase(), centerX, 940);
+    ctx.fillText(recipientName.toUpperCase(), centerX, 990);
     setLetterSpacing("0px");
 
     // Course Description with responsive word-wrapping and inline bold spans
@@ -252,7 +252,7 @@ export async function downloadCertificatePNG(
     }
 
     // Render wrapped lines centered
-    let paragraphY = 1045;
+    let paragraphY = 1095;
     for (const line of lines) {
       let totalLineWidth = 0;
       for (const item of line) {
@@ -283,7 +283,7 @@ export async function downloadCertificatePNG(
       dateInfo.startMonth === dateInfo.endMonth && dateInfo.startYear === dateInfo.endYear
         ? `From ${dateInfo.startDay}${dateInfo.startSuffix} to ${dateInfo.endDay}${dateInfo.endSuffix} ${dateInfo.endMonth} ${dateInfo.endYear}, ${locationText}.`
         : `From ${dateInfo.startDay}${dateInfo.startSuffix} ${dateInfo.startMonth} to ${dateInfo.endDay}${dateInfo.endSuffix} ${dateInfo.endMonth} ${dateInfo.endYear}, ${locationText}.`;
-    ctx.fillText(dateText, centerX, 1335);
+    ctx.fillText(dateText, centerX, 1385);
 
     // 4. FOOTER: SIGNATURE SECTION
     // Container: w-[85%] mx-auto flex justify-end with w-[34%] max-w-[36cqw] block

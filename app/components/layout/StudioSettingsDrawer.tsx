@@ -72,10 +72,8 @@ export default function StudioSettingsDrawer({
           </button>
         </div>
 
-        {/* Drawer Body */}
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
-          {/* Layout View Switcher */}
-          <div>
+          <div className="hidden xl:flex flex-col space-y-2.5">
             <h3 className="text-xs font-semibold uppercase tracking-wider text-black/50 mb-3">
               Layout View
             </h3>
@@ -121,7 +119,7 @@ export default function StudioSettingsDrawer({
               <IoInformationCircleOutline className="w-4 h-4 text-slate-500" />
               Certificate Configuration
             </h3>
-            <div className="py-3.5 space-y-2.5 text-xs bg-slate-50 border border-slate-200/80 rounded-xl p-3.5">
+            <div className="py-3.5 space-y-2.5 text-xs rounded-xl">
               <div className="flex justify-between items-start gap-2">
                 <span className="text-slate-500 shrink-0">Program:</span>
                 <span className="font-semibold text-slate-800 text-right">
