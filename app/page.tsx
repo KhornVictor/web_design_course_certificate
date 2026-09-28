@@ -1,8 +1,6 @@
 import { getCertificateData } from "@/lib/assets";
 import CertificateStudio from "@/app/components/layout/CertificateStudio";
 
-export const dynamic = "force-dynamic";
-
 export default function Home() {
   const certificateData = getCertificateData();
 
