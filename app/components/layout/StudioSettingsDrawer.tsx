@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import type { CertificateConfig } from "@/lib/assets";
 import { CiGrid2H, CiGrid41 } from "react-icons/ci";
 import {
@@ -32,8 +31,7 @@ export default function StudioSettingsDrawer({
   const programTitle = config?.for || "GIC Crash Course 2026";
   const courseTitle = config?.subject || "Web Design";
   const signatoryName = config?.signature || "Mrs. Seak Leng";
-  const signatoryRole =
-    config?.role || "Deputy Head of the Department of GIC";
+  const signatoryRole = config?.role || "Deputy Head of the Department of GIC";
   const locationText = config?.location || "Phnom Penh, Cambodia";
   const dateRange =
     config?.start_date && config?.end_date
@@ -137,7 +135,9 @@ export default function StudioSettingsDrawer({
                 </span>
               </div>
               <div className="flex justify-between items-start gap-2">
-                <span className="text-slate-500 shrink-0">Total Certificates:</span>
+                <span className="text-slate-500 shrink-0">
+                  Total Certificates:
+                </span>
                 <span className="font-semibold text-[#004a99] text-right">
                   {totalStudents} recipients
                 </span>
@@ -169,8 +169,6 @@ export default function StudioSettingsDrawer({
             </div>
           </div>
         </div>
-
-        {/* Drawer Footer Actions */}
         <div className="p-5 space-y-3">
           <div className="space-y-2.5">
             <button

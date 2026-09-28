@@ -201,7 +201,6 @@ export default function CertificateDetailDrawer({
           </button>
         </div>
 
-        {/* Drawer Footer */}
         {totalStudents > 1 && (
           <div className="flex items-center justify-between bg-slate-50 border border-slate-200/80 rounded-xl px-3 py-2 text-xs">
             <button

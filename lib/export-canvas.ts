@@ -1,16 +1,21 @@
 import { formatCertificateDates } from "./date-utils";
 import type { Student, CertificateAssets } from "./assets";
 
+export interface CertificateExportOptions {
+  certificateTitle?: string;
+  programTitle?: string;
+  signatoryName?: string;
+  signatoryRole?: string;
+  locationText?: string;
+  courseName?: string;
+  startDate?: string;
+  completionDate?: string;
+}
+
 export async function downloadCertificatePNG(
   student: Student,
   assets: CertificateAssets,
-  options: {
-    certificateTitle?: string;
-    programTitle?: string;
-    signatoryName?: string;
-    signatoryRole?: string;
-    locationText?: string;
-  } = {}
+  options: CertificateExportOptions = {}
 ) {
   const {
     certificateTitle = assets.config?.name || "CERTIFICATE OF COMPLETION",
@@ -18,13 +23,19 @@ export async function downloadCertificatePNG(
     signatoryName = assets.config?.signature || "Mrs. Seak Leng",
     signatoryRole = assets.config?.role || "Deputy Head of the Department of GIC",
     locationText = assets.config?.location || "Phnom Penh, Cambodia",
+    courseName = options.courseName || student.course || assets.config?.subject || "Web Design",
   } = options;
 
-  const dateInfo = formatCertificateDates(student.start_date, student.completion_date);
+  const recipientName = student.name || "Student Name";
+  const sDate = options.startDate || student.start_date || assets.config?.start_date || "2024-01-15";
+  const cDate = options.completionDate || student.completion_date || assets.config?.end_date || "2024-01-29";
+  const dateInfo = formatCertificateDates(sDate, cDate);
 
-  // A4 Landscape high-res: 2480 x 1754
-  const width = 2480;
-  const height = 1754;
+  // High-Resolution A4 Landscape (aspect 297 / 210 = 1.4142857) at 300 DPI
+  const width = 2970;
+  const height = 2100;
+  // 1cqw matches CSS container query inline-size (1% of width)
+  const cqw = width / 100; // 29.7px
 
   const canvas = document.createElement("canvas");
   canvas.width = width;
@@ -32,235 +43,321 @@ export async function downloadCertificatePNG(
   const ctx = canvas.getContext("2d");
   if (!ctx) return;
 
-  const loadImage = (src: string): Promise<HTMLImageElement> => {
-    return new Promise((resolve, reject) => {
+  // Safe image loader that handles base64 data URIs and external URLs without CORS errors
+  const safeLoadImage = async (src?: string): Promise<HTMLImageElement | null> => {
+    if (!src) return null;
+    return new Promise((resolve) => {
       const img = new Image();
-      img.crossOrigin = "anonymous";
+      if (!src.startsWith("data:")) {
+        img.crossOrigin = "anonymous";
+      }
       img.onload = () => resolve(img);
-      img.onerror = (e) => reject(e);
+      img.onerror = () => resolve(null);
       img.src = src;
     });
   };
 
+  // Safe letter-spacing setter
+  const setLetterSpacing = (spacing: string) => {
+    if ("letterSpacing" in ctx) {
+      try {
+        (ctx as unknown as { letterSpacing: string }).letterSpacing = spacing;
+      } catch {
+        // Fallback for browsers without canvas letterSpacing
+      }
+    }
+  };
+
   try {
-    // 1. Draw outer template image (border)
+    // Ensure document fonts are loaded before canvas text measurements
+    if (typeof document !== "undefined" && document.fonts) {
+      try {
+        await document.fonts.ready;
+      } catch {
+        // Continue if font readiness check is unsupported
+      }
+    }
+
+    // 1. Draw Certificate Background (Authentic border & background image)
+    let bgImg: HTMLImageElement | null = null;
     if (assets.templateBorderImage) {
-      const borderImg = await loadImage(assets.templateBorderImage);
-      ctx.drawImage(borderImg, 0, 0, width, height);
+      bgImg = await safeLoadImage(assets.templateBorderImage);
+    }
+
+    if (bgImg) {
+      ctx.drawImage(bgImg, 0, 0, width, height);
     } else {
+      // Fallback elegant border if image fails
       ctx.fillStyle = "#ffffff";
       ctx.fillRect(0, 0, width, height);
-      ctx.strokeStyle = "#1b4332";
-      ctx.lineWidth = 40;
-      ctx.strokeRect(20, 20, width - 40, height - 40);
+      ctx.strokeStyle = "#004a99";
+      ctx.lineWidth = 14;
+      ctx.strokeRect(40, 40, width - 80, height - 80);
+      ctx.strokeStyle = "#c59b27";
+      ctx.lineWidth = 4;
+      ctx.strokeRect(58, 58, width - 116, height - 116);
     }
 
-    // 2. Clear / Fill inner certificate canvas
-    const innerX = width * 0.054;
-    const innerY = height * 0.068;
-    const innerW = width * 0.892;
-    const innerH = height * 0.864;
+    // Usable content area (matching px-[10cqw] py-[10cqw] in Template.tsx)
+    const paddingX = 10 * cqw; // 297px
+    const contentW = width - 2 * paddingX; // 2376px
+    const centerX = width / 2; // 1485px
 
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(innerX, innerY, innerW, innerH);
-
-    // Exact Thin Inner Hairline Border Rectangle from image.png
-    ctx.strokeStyle = "#1a1a1a";
-    ctx.lineWidth = 2.5;
-    ctx.strokeRect(innerX + 16, innerY + 16, innerW - 32, innerH - 32);
-
-    // 3. Repeating horizontal subtle watermark text
-    ctx.save();
-    ctx.beginPath();
-    ctx.rect(innerX + 16, innerY + 16, innerW - 32, innerH - 32);
-    ctx.clip();
-
-    ctx.fillStyle = "rgba(140, 123, 102, 0.16)";
-    ctx.font = "bold 14px 'Times New Roman', serif";
-    const wmText = "Institut de Technologie du Cambodge, វិទ្យាស្ថានបច្ចេកវិទ្យាកម្ពុជា, Institut de Technologie du Cambodge, ";
-    const textMetrics = ctx.measureText(wmText);
-    const stepX = textMetrics.width;
-    const stepY = 46;
-
-    for (let y = innerY; y < innerY + innerH + 100; y += stepY) {
-      const offsetX = ((Math.floor(y / stepY)) % 2) * (stepX / 2.5);
-      for (let x = innerX - 200 + offsetX; x < innerX + innerW + 200; x += stepX) {
-        ctx.fillText(wmText, x, y);
-      }
+    // 2. HEADER SECTION
+    // Left: ITC Logo + Institution Name
+    const leftColCenterX = paddingX + contentW * 0.14; // ~630px
+    const itcImg = await safeLoadImage(assets.itcLogo);
+    if (itcImg) {
+      const maxLogoW = 8.5 * cqw; // ~252px
+      const maxLogoH = 8.5 * cqw; // ~252px
+      let lw = itcImg.naturalWidth || maxLogoW;
+      let lh = itcImg.naturalHeight || maxLogoH;
+      const scale = Math.min(maxLogoW / lw, maxLogoH / lh, 1);
+      lw *= scale;
+      lh *= scale;
+      ctx.drawImage(itcImg, leftColCenterX - lw / 2, 297, lw, lh);
     }
-    ctx.restore();
-
-    // 4. Center ITC Seal Watermark (Rotated counter-clockwise by -22deg)
-    if (assets.itcLogo) {
-      const sealImg = await loadImage(assets.itcLogo);
-      const sealSize = 750;
-      const centerX = width / 2;
-      const centerY = height / 2;
-
-      ctx.save();
-      ctx.translate(centerX, centerY);
-      ctx.rotate((-22 * Math.PI) / 180);
-      ctx.globalAlpha = 0.14;
-      ctx.drawImage(sealImg, -sealSize / 2, -sealSize / 2, sealSize, sealSize);
-      ctx.restore();
-    }
-
-    // 5. Header Logos & Titles
-    // Left: ITC Logo
-    if (assets.itcLogo) {
-      const itcImg = await loadImage(assets.itcLogo);
-      const itcW = 170;
-      const itcH = 170;
-      const itcX = innerX + 120;
-      const itcY = innerY + 50;
-      ctx.drawImage(itcImg, itcX, itcY, itcW, itcH);
-
-      ctx.fillStyle = "#000000";
-      ctx.font = "bold 23px 'Times New Roman', serif";
-      ctx.textAlign = "center";
-      ctx.fillText("Institute of Technology of Cambodia", itcX + itcW / 2, itcY + itcH + 32);
-    }
-
-    // Right: GIC Logo
-    if (assets.gicLogo) {
-      const gicImg = await loadImage(assets.gicLogo);
-      const gicW = 195;
-      const gicH = 135;
-      const gicX = innerX + innerW - 120 - gicW;
-      const gicY = innerY + 68;
-      ctx.drawImage(gicImg, gicX, gicY, gicW, gicH);
-
-      ctx.fillStyle = "#000000";
-      ctx.font = "bold 21px 'Times New Roman', serif";
-      ctx.textAlign = "center";
-      ctx.fillText("Department of Information and", gicX + gicW / 2, gicY + gicH + 34);
-      ctx.fillText("Communication Engineering", gicX + gicW / 2, gicY + gicH + 60);
-    }
-
-    // Center: Kingdom of Cambodia & Motto
-    const centerX = width / 2;
+    ctx.font = `bold ${Math.round(1.3 * cqw)}px 'Times New Roman', Times, serif`;
+    ctx.fillStyle = "#333333";
     ctx.textAlign = "center";
-    ctx.fillStyle = "#000000";
-    ctx.font = "bold 36px 'Times New Roman', serif";
+    ctx.fillText("Institute of Technology of Cambodia", leftColCenterX, 297 + 8.5 * cqw + 1.3 * cqw + 8);
 
-    const setSpacing = (val: string) => {
-      if ("letterSpacing" in ctx) {
-        (ctx as unknown as { letterSpacing: string }).letterSpacing = val;
-      }
-    };
+    // Center: Kingdom of Cambodia + Nation Religion King + Ornamental Rule
+    setLetterSpacing("5px");
+    ctx.font = `600 ${Math.round(2.2 * cqw)}px 'Times New Roman', Times, serif`;
+    ctx.fillStyle = "#222222";
+    ctx.textAlign = "center";
+    ctx.fillText("KINGDOM OF CAMBODIA", centerX, 297 + 2.5 * cqw);
 
-    setSpacing("4px");
-    ctx.fillText("KINGDOM OF CAMBODIA", centerX, innerY + 115);
+    setLetterSpacing("2px");
+    ctx.font = `400 ${Math.round(1.8 * cqw)}px 'Times New Roman', Times, serif`;
+    ctx.fillStyle = "#444444";
+    ctx.fillText("Nation, Religion, King", centerX, 297 + 2.5 * cqw + 1.8 * cqw + 12);
+    setLetterSpacing("0px");
 
-    ctx.font = "400 27px 'Times New Roman', serif";
-    setSpacing("1px");
-    ctx.fillText("Nation, Religion, King", centerX, innerY + 160);
-
-    // Decorative Flourish Divider
-    if (assets.ornamentalRule) {
-      const ornImg = await loadImage(assets.ornamentalRule);
-      const ornW = 280;
+    // Decorative Ornamental Rule
+    const ornImg = await safeLoadImage(assets.ornamentalRule);
+    const ornW = 18 * cqw; // ~535px
+    const ornY = 297 + 2.5 * cqw + 1.8 * cqw + 26;
+    if (ornImg && ornImg.naturalWidth > 0) {
       const ornH = (ornImg.naturalHeight / ornImg.naturalWidth) * ornW;
-      ctx.drawImage(ornImg, centerX - ornW / 2, innerY + 175, ornW, ornH);
+      ctx.drawImage(ornImg, centerX - ornW / 2, ornY, ornW, ornH);
     } else {
-      ctx.strokeStyle = "#000000";
+      // Fallback flourish rule
+      ctx.strokeStyle = "#333333";
       ctx.lineWidth = 2.5;
       ctx.beginPath();
-      ctx.moveTo(centerX - 190, innerY + 195);
-      ctx.quadraticCurveTo(centerX - 80, innerY + 190, centerX - 30, innerY + 195);
+      ctx.moveTo(centerX - ornW / 2, ornY + 6);
+      ctx.lineTo(centerX + ornW / 2, ornY + 6);
       ctx.stroke();
-
-      ctx.beginPath();
-      ctx.moveTo(centerX + 30, innerY + 195);
-      ctx.quadraticCurveTo(centerX + 80, innerY + 190, centerX + 190, innerY + 195);
-      ctx.stroke();
-
-      // Center circle & flanking beads
-      ctx.fillStyle = "#000000";
-      ctx.beginPath();
-      ctx.arc(centerX, innerY + 195, 7.5, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.fillStyle = "#ffffff";
-      ctx.beginPath();
-      ctx.arc(centerX, innerY + 195, 3.5, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.fillStyle = "#000000";
-      ctx.beginPath();
-      ctx.arc(centerX - 18, innerY + 195, 4.5, 0, Math.PI * 2);
-      ctx.arc(centerX + 18, innerY + 195, 4.5, 0, Math.PI * 2);
-      ctx.fill();
     }
 
-    // 6. CERTIFICATE OF COMPLETION: #005d9e in Times New Roman Bold
-    setSpacing("5px");
-    ctx.font = "bold 65px 'Times New Roman', serif";
-    ctx.fillStyle = "#005d9e";
-    ctx.fillText(certificateTitle.toUpperCase(), centerX, innerY + 415);
+    // Right: GIC Logo + Department Name
+    const rightColCenterX = width - (paddingX + contentW * 0.14); // ~2340px
+    const gicImg = await safeLoadImage(assets.gicLogo);
+    if (gicImg) {
+      const maxGicW = 8.8 * cqw; // ~261px
+      const maxGicH = 8.5 * cqw; // ~252px
+      let gw = gicImg.naturalWidth || maxGicW;
+      let gh = gicImg.naturalHeight || maxGicH;
+      const scale = Math.min(maxGicW / gw, maxGicH / gh, 1);
+      gw *= scale;
+      gh *= scale;
+      ctx.drawImage(gicImg, rightColCenterX - gw / 2, 297, gw, gh);
+    }
+    ctx.font = `bold ${Math.round(1.25 * cqw)}px 'Times New Roman', Times, serif`;
+    ctx.fillStyle = "#333333";
+    ctx.textAlign = "center";
+    const gicTextY = 297 + 8.5 * cqw + 1.25 * cqw + 4;
+    ctx.fillText("Department of Information and", rightColCenterX, gicTextY);
+    ctx.fillText("Communication Engineering", rightColCenterX, gicTextY + 1.25 * cqw + 6);
 
-    // 7. Subheading: Italic Times New Roman
-    setSpacing("1px");
-    ctx.font = "italic 400 28px 'Times New Roman', serif";
-    ctx.fillStyle = "#000000";
-    ctx.fillText("This certificate is proudly awarded to", centerX, innerY + 500);
+    // 3. MAIN CERTIFICATE CONTENT
+    // Title: CERTIFICATE OF COMPLETION
+    setLetterSpacing("3px");
+    ctx.font = `bold ${Math.round(3.8 * cqw)}px 'Times New Roman', Times, serif`;
+    ctx.fillStyle = "#004a99";
+    ctx.textAlign = "center";
+    ctx.fillText(certificateTitle.toUpperCase(), centerX, 745);
 
-    // 8. Recipient Name: #005d9e in Times New Roman Bold
-    setSpacing("3px");
-    ctx.font = "bold 60px 'Times New Roman', serif";
-    ctx.fillStyle = "#005d9e";
-    ctx.fillText(student.name.toUpperCase(), centerX, innerY + 600);
+    // Subtitle: This certificate is proudly awarded to
+    setLetterSpacing("0px");
+    ctx.font = `italic 400 ${Math.round(1.6 * cqw)}px 'Times New Roman', Times, serif`;
+    ctx.fillStyle = "#555555";
+    ctx.fillText("This certificate is proudly awarded to", centerX, 825);
 
-    // 9. Course Description
-    setSpacing("0px");
-    ctx.font = "400 26px 'Times New Roman', serif";
-    ctx.fillStyle = "#000000";
+    // Recipient Name
+    setLetterSpacing("4px");
+    ctx.font = `bold ${Math.round(3.0 * cqw)}px 'Times New Roman', Times, serif`;
+    ctx.fillStyle = "#004a99";
+    ctx.fillText(recipientName.toUpperCase(), centerX, 940);
+    setLetterSpacing("0px");
 
-    const line1 = `You have successfully fulfilled all the requirements and completed the intensive training for the`;
-    const line2 = `${student.course} course as part of the “${programTitle}”. This certificate is awarded by the`;
-    const line3 = `Department of Information and Communication Engineering in recognition of your commitment to academic excellence.`;
+    // Course Description with responsive word-wrapping and inline bold spans
+    const descFontSize = Math.round(1.5 * cqw); // ~45px
+    const descLineHeight = descFontSize * 1.7; // ~76px
+    const maxParagraphW = contentW * 0.9; // ~2138px
 
-    ctx.fillText(line1, centerX, innerY + 705);
+    interface Token {
+      text: string;
+      bold: boolean;
+    }
 
-    ctx.font = "bold 26px 'Times New Roman', serif";
-    ctx.fillText(line2, centerX, innerY + 750);
+    const descTokens: Token[] = [
+      { text: "You have successfully fulfilled all the requirements and completed the intensive training for the ", bold: false },
+      { text: courseName, bold: true },
+      { text: " course as part of the ", bold: false },
+      { text: `“${programTitle}”`, bold: true },
+      { text: ". This certificate is awarded by the Department of Information and Communication Engineering in recognition of your commitment to academic excellence.", bold: false },
+    ];
 
-    ctx.font = "400 26px 'Times New Roman', serif";
-    ctx.fillText(line3, centerX, innerY + 795);
+    // Split tokens into individual words and whitespace
+    const words: Token[] = [];
+    for (const token of descTokens) {
+      const parts = token.text.split(/(\s+)/);
+      for (const part of parts) {
+        if (part) words.push({ text: part, bold: token.bold });
+      }
+    }
 
-    // 10. Date & Location: Italic
-    ctx.font = "italic 400 25px 'Times New Roman', serif";
+    // Build wrapped lines
+    const lines: Token[][] = [];
+    let currentLine: Token[] = [];
+    let currentLineWidth = 0;
+
+    for (const item of words) {
+      if (item.text.trim() === "" && currentLine.length === 0) continue;
+
+      ctx.font = item.bold
+        ? `bold ${descFontSize}px 'Times New Roman', Times, serif`
+        : `500 ${descFontSize}px 'Times New Roman', Times, serif`;
+      const itemWidth = ctx.measureText(item.text).width;
+
+      if (currentLineWidth + itemWidth > maxParagraphW && currentLine.length > 0) {
+        lines.push(currentLine);
+        if (item.text.trim() === "") {
+          currentLine = [];
+          currentLineWidth = 0;
+        } else {
+          currentLine = [item];
+          currentLineWidth = itemWidth;
+        }
+      } else {
+        currentLine.push(item);
+        currentLineWidth += itemWidth;
+      }
+    }
+    if (currentLine.length > 0) {
+      lines.push(currentLine);
+    }
+
+    // Render wrapped lines centered
+    let paragraphY = 1045;
+    for (const line of lines) {
+      let totalLineWidth = 0;
+      for (const item of line) {
+        ctx.font = item.bold
+          ? `bold ${descFontSize}px 'Times New Roman', Times, serif`
+          : `500 ${descFontSize}px 'Times New Roman', Times, serif`;
+        totalLineWidth += ctx.measureText(item.text).width;
+      }
+
+      let drawX = (width - totalLineWidth) / 2;
+      for (const item of line) {
+        ctx.font = item.bold
+          ? `bold ${descFontSize}px 'Times New Roman', Times, serif`
+          : `500 ${descFontSize}px 'Times New Roman', Times, serif`;
+        ctx.fillStyle = item.bold ? "#000000" : "#333333";
+        ctx.textAlign = "left";
+        ctx.fillText(item.text, drawX, paragraphY);
+        drawX += ctx.measureText(item.text).width;
+      }
+      paragraphY += descLineHeight;
+    }
+
+    // Date & Location
+    ctx.font = `italic 400 ${Math.round(1.4 * cqw)}px 'Times New Roman', Times, serif`;
+    ctx.fillStyle = "#555555";
+    ctx.textAlign = "center";
     const dateText =
       dateInfo.startMonth === dateInfo.endMonth && dateInfo.startYear === dateInfo.endYear
         ? `From ${dateInfo.startDay}${dateInfo.startSuffix} to ${dateInfo.endDay}${dateInfo.endSuffix} ${dateInfo.endMonth} ${dateInfo.endYear}, ${locationText}.`
         : `From ${dateInfo.startDay}${dateInfo.startSuffix} ${dateInfo.startMonth} to ${dateInfo.endDay}${dateInfo.endSuffix} ${dateInfo.endMonth} ${dateInfo.endYear}, ${locationText}.`;
-    ctx.fillText(dateText, centerX, innerY + 890);
+    ctx.fillText(dateText, centerX, 1335);
 
-    // 11. Signature Section (Bottom Right - NO divider line, exact signature position)
-    const sigX = innerX + innerW - 500;
-    const sigY = innerY + innerH - 330;
+    // 4. FOOTER: SIGNATURE SECTION
+    // Container: w-[85%] mx-auto flex justify-end with w-[34%] max-w-[36cqw] block
+    const sigBlockWidth = contentW * 0.85 * 0.34; // ~686px
+    const rightMargin = (contentW * 0.15) / 2;
+    const sigRightX = paddingX + contentW - rightMargin; // ~2495px
+    const sigLeftX = sigRightX - sigBlockWidth; // ~1809px
+    const sigCenterX = (sigLeftX + sigRightX) / 2; // ~2152px
+    const sigLineY = 1680;
 
-    if (assets.signature) {
-      const sigImg = await loadImage(assets.signature);
-      const sigW = 290;
-      const sigH = 145;
-      ctx.drawImage(sigImg, sigX + 55, sigY - 25, sigW, sigH);
+    // Draw Signature Image
+    const sigImg = await safeLoadImage(assets.signature);
+    if (sigImg) {
+      const maxSigW = sigBlockWidth * 0.85;
+      const maxSigH = 6.5 * cqw; // ~193px
+      let sw = sigImg.naturalWidth || maxSigW;
+      let sh = sigImg.naturalHeight || maxSigH;
+      const scale = Math.min(maxSigW / sw, maxSigH / sh, 1);
+      sw *= scale;
+      sh *= scale;
+      ctx.drawImage(sigImg, sigCenterX - sw / 2, sigLineY - sh - 4, sw, sh);
     }
 
-    // Signatory name & role directly below signature
-    ctx.textAlign = "center";
+    // Signature Divider Line
+    ctx.strokeStyle = "#333333";
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(sigLeftX, sigLineY);
+    ctx.lineTo(sigRightX, sigLineY);
+    ctx.stroke();
+
+    // Signatory Name
+    ctx.font = `bold ${Math.round(1.5 * cqw)}px 'Times New Roman', Times, serif`;
     ctx.fillStyle = "#000000";
-    ctx.font = "bold 25px 'Times New Roman', serif";
-    ctx.fillText(signatoryName, sigX + 200, sigY + 145);
+    ctx.textAlign = "center";
+    ctx.fillText(signatoryName, sigCenterX, sigLineY + 1.5 * cqw + 6);
 
-    ctx.font = "400 21px 'Times New Roman', serif";
-    ctx.fillText(signatoryRole, sigX + 200, sigY + 180);
+    // Signatory Role
+    ctx.font = `400 ${Math.round(1.3 * cqw)}px 'Times New Roman', Times, serif`;
+    ctx.fillStyle = "#333333";
+    ctx.textAlign = "center";
+    ctx.fillText(signatoryRole, sigCenterX, sigLineY + 1.5 * cqw + 6 + 1.35 * (1.3 * cqw));
 
-    // Trigger download
-    const safeName = student.name.replace(/[^a-zA-Z0-9]/g, "_");
-    const link = document.createElement("a");
-    link.download = `Certificate-${safeName}.png`;
-    link.href = canvas.toDataURL("image/png");
-    link.click();
+    // 5. Trigger High-Quality PNG Download via Blob URL
+    const safeName = recipientName.replace(/[^a-zA-Z0-9]/g, "_");
+    await new Promise<void>((resolve, reject) => {
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          try {
+            const dataUrl = canvas.toDataURL("image/png");
+            const link = document.createElement("a");
+            link.download = `Certificate-${safeName}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            resolve();
+          } catch (e) {
+            reject(e);
+          }
+          return;
+        }
+
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = `Certificate-${safeName}.png`;
+        link.href = url;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        resolve();
+      }, "image/png");
+    });
   } catch (err) {
     console.error("Canvas export failed:", err);
   }

@@ -61,23 +61,32 @@ export default function CertificateStudio({
 
   const handlePrintSingle = (student: Student) => {
     setPrintTarget(student);
-    setTimeout(() => {
-      window.print();
+    requestAnimationFrame(() => {
       setTimeout(() => {
-        setPrintTarget(null);
-      }, 500);
-    }, 150);
+        const cleanup = () => {
+          setPrintTarget(null);
+          window.removeEventListener("afterprint", cleanup);
+        };
+        window.addEventListener("afterprint", cleanup);
+        window.print();
+        setTimeout(cleanup, 2000);
+      }, 200);
+    });
   };
 
   const handlePrintAll = () => {
     setPrintTarget("all");
-    setViewMode("batch");
-    setTimeout(() => {
-      window.print();
+    requestAnimationFrame(() => {
       setTimeout(() => {
-        setPrintTarget(null);
-      }, 500);
-    }, 150);
+        const cleanup = () => {
+          setPrintTarget(null);
+          window.removeEventListener("afterprint", cleanup);
+        };
+        window.addEventListener("afterprint", cleanup);
+        window.print();
+        setTimeout(cleanup, 2500);
+      }, 350);
+    });
   };
 
   const handleDownloadPNG = async (student: Student) => {
@@ -89,6 +98,9 @@ export default function CertificateStudio({
         signatoryName,
         signatoryRole,
         locationText,
+        courseName: student.course || config?.subject || "Web Design",
+        startDate: student.start_date || config?.start_date,
+        completionDate: student.completion_date || config?.end_date,
       });
     } catch (err) {
       console.error("Failed to export certificate PNG:", err);
@@ -203,7 +215,7 @@ export default function CertificateStudio({
 
 
   return (
-    <div className="min-h-screen bg-gray-100 text-slate-950 flex flex-col">
+    <div className="min-h-screen bg-gray-100 text-slate-950 flex flex-col print:block! print:min-h-0! print:bg-white! print:p-0! print:m-0!">
       <header className="no-print sticky top-0 z-50 bg-white backdrop-blur-md px-4 lg:px-8 py-3.5 shadow-md">
         <div className="mx-auto flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center space-x-3">
@@ -331,18 +343,26 @@ export default function CertificateStudio({
         onPrevStudent={handlePrevStudent}
       />
 
-      {/* Print-only container for single certificate print */}
-      {printTarget && printTarget !== "all" && (
-        <div className="hidden print:block fixed inset-0 w-screen h-screen z-9999 bg-white">
-          <Template
-            student={printTarget}
-            certificateTitle={certificateTitle}
-            programTitle={programTitle}
-            signatoryName={signatoryName}
-            signatoryRole={signatoryRole}
-            locationText={locationText}
-            assets={initialData}
-          />
+      {/* High-Fidelity Dedicated Print Container for Single or All Certificates */}
+      {printTarget && (
+        <div className="hidden print:block w-[297mm] m-0 p-0 bg-white print:static!">
+          {(printTarget === "all" ? students : [printTarget]).map((st, idx) => (
+            <div
+              key={`print-page-${st.name}-${idx}`}
+              className="certificate-print-page"
+            >
+              <Template
+                student={st}
+                certificateTitle={certificateTitle}
+                programTitle={programTitle}
+                signatoryName={signatoryName}
+                signatoryRole={signatoryRole}
+                locationText={locationText}
+                assets={initialData}
+                isSelected={false}
+              />
+            </div>
+          ))}
         </div>
       )}
 
@@ -355,7 +375,7 @@ export default function CertificateStudio({
           isTransitioningView
             ? "opacity-0 scale-[0.985] blur-[1px] pointer-events-none"
             : "opacity-100 scale-100 blur-0"
-        } ${printTarget && printTarget !== "all" ? "print:hidden!" : ""}`}
+        } ${printTarget ? "print:hidden!" : ""}`}
       >
         {displayStudents.length > 0 ? (
           displayStudents.map(({ student: st, isExiting }) => (

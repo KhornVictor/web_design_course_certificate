@@ -85,8 +85,13 @@ body {
 /* Print styles for landscape certificate */
 @media print {
   @page {
-    size: A4 landscape;
+    size: 297mm 210mm;
     margin: 0;
+  }
+
+  *, *:before, *:after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   html, body {
@@ -94,34 +99,40 @@ body {
     color: #000000 !important;
     margin: 0 !important;
     padding: 0 !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
+    width: 297mm !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    position: static !important;
+    display: block !important;
   }
 
   .no-print {
     display: none !important;
   }
 
-  .certificate-print-container {
-    width: 100vw !important;
-    height: 100vh !important;
-    max-width: none !important;
-    max-height: none !important;
+  .certificate-print-page {
+    width: 297mm !important;
+    height: 210mm !important;
+    max-width: 297mm !important;
+    max-height: 210mm !important;
+    min-width: 297mm !important;
+    min-height: 210mm !important;
+    page-break-after: always !important;
+    break-after: page !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+    overflow: hidden !important;
     margin: 0 !important;
     padding: 0 !important;
-    box-shadow: none !important;
-    border-radius: 0 !important;
-    page-break-after: always;
-    break-after: page;
-    display: flex !important;
-    align-items: center !important;
-    justify-content: center !important;
+    box-sizing: border-box !important;
+    display: block !important;
+    background: #ffffff !important;
+    position: relative !important;
   }
 
-  .certificate-print-page {
-    width: 100vw !important;
-    height: 100vh !important;
-    page-break-after: always;
-    break-after: page;
+  .certificate-print-page:last-child {
+    page-break-after: auto !important;
+    break-after: auto !important;
   }
 }

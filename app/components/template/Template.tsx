@@ -76,7 +76,7 @@ export default function Template({
         hover:-translate-y-1.5 hover:scale-[1.012] active:scale-[0.995] active:translate-y-0
         transition-all duration-300 ease-out overflow-hidden select-none mx-auto
         ${isSelected ? "ring-1 ring-black/50 ring-opacity-50" : ""}
-        print:shadow-none print:ring-0! print:w-full print:h-full print:border-none print:m-0 print:transform-none print:transition-none break-after-page ${className}`}
+        print:shadow-none print:ring-0! print:w-full print:h-full print:border-none print:m-0 print:transform-none print:transition-none print:break-inside-avoid ${className}`}
       style={{
         containerType: "inline-size",
         fontFamily: "'Times New Roman', Times, 'Lora', serif",
@@ -84,6 +84,8 @@ export default function Template({
         backgroundSize: "100% 100%",
         backgroundRepeat: "no-repeat",
         WebkitFontSmoothing: "antialiased",
+        WebkitPrintColorAdjust: "exact",
+        printColorAdjust: "exact",
       }}
     >
       <div className="pointer-events-none absolute inset-0 z-30 overflow-hidden no-print print:hidden">
