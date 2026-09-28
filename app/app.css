@@ -1,0 +1,354 @@
+/* styles.css for Certificate Generator - REVISED
+   Contains all styling, including print-specific rules.
+*/
+
+/* ====================================================================== */
+/* 1. CSS Variables for Easy Customization                                */
+/* ====================================================================== */
+:root {
+  /* -- Colors -- */
+  --accent-color: #004a99;
+  /* Deep blue from ITC logo */
+  --text-color: #333333;
+  /* Dark gray for readability */
+  --background-color: #ffffff;
+  /* White background */
+  --border-accent-color: #b8860b;
+  /* DarkGoldenRod - Kept for header line */
+  --body-background: #f0f2f5;
+  /* Light gray for the page background */
+
+  /* -- Typography -- */
+  --font-body: 'Lora', serif;
+
+  /* -- Spacing (A4 Landscape: 297mm x 210mm) -- */
+  --cert-width: 297mm;
+  --cert-height: 210mm;
+}
+
+/* ====================================================================== */
+/* 2. General Body and Layout Styles                                      */
+/* ====================================================================== */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--body-background);
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2rem 0;
+  line-height: 1.6;
+}
+
+.preview-container {
+  width: 100%;
+  max-width: calc(var(--cert-width) + 40px);
+}
+
+.variant-title {
+  font-family: var(--font-heading);
+  text-align: center;
+  margin-top: 3rem;
+  margin-bottom: 1.5rem;
+  color: #555;
+  font-size: 1.8rem;
+}
+
+/* ====================================================================== */
+/* 3. Certificate Container with Image Background                         */
+/* ====================================================================== */
+.certificate {
+  width: var(--cert-width);
+  height: var(--cert-height);
+  background-image: url('./assets/certificate-background.jpg');
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  margin: 0 auto;
+}
+
+.certificate-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 28mm;
+  text-align: center;
+}
+
+/* ====================================================================== */
+/* 4. Certificate Content (Header, Main, Footer)                          */
+/* ====================================================================== */
+
+/* --- NEW HEADER STYLES --- */
+.certificate-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  margin-bottom: 1.5em;
+}
+
+.header-left,
+.header-right {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  flex: 1;
+}
+
+.header-left {
+  justify-content: flex-start;
+  gap: 15px;
+}
+
+.header-right {
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+.header-center {
+  font-size: 1.5em;
+  flex: 1.5;
+  font-family: 'Times New Roman', Times, serif;
+  text-align: center;
+  font-weight: 500;
+}
+
+.header-center #Ornamental-Rule {
+  width: 200px;
+  opacity: 0.8;
+}
+
+.header-center p {
+  font-size: 1em;
+}
+
+.header-logo {
+  max-width: 120px;
+}
+
+.department-logo {
+  max-width: 120px;
+}
+
+.institute-info {
+  text-align: left;
+}
+
+.institute-name,
+.department-name {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.9rem;
+  color: var(--text-color);
+}
+
+.kingdom-name {
+  font-family: var(--font-cert-title);
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.motto {
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  color: #444;
+  position: relative;
+  margin-top: 4px;
+}
+
+/* --- END NEW HEADER STYLES --- */
+
+.certificate-body {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.5rem 0;
+  flex: 1;
+}
+
+.cert-title {
+  font-family: var(--font-cert-title);
+  color: var(--accent-color);
+  font-size: 2.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 0.5rem;
+}
+
+.presented-to {
+  font-family: var(--font-body);
+  font-size: 1.1rem;
+  margin-bottom: 0.8rem;
+  font-style: italic;
+  color: #555;
+}
+
+.recipient-name {
+  font-family: var(--font-cert-title);
+  color: var(--accent-color);
+  font-size: 2rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+}
+
+.certificate-text {
+  font-weight: 500;
+  font-family: var(--font-body);
+  font-size: 1.05rem;
+  max-width: 90%;
+  margin: 0 auto;
+  line-height: 1.8;
+  margin-top: 0.8em;
+}
+
+.Crash-Course {
+  font-weight: 900;
+}
+
+.certificate-footer {
+  flex-shrink: 0;
+  margin-top: 1.5rem;
+}
+
+.date-location {
+  margin-bottom: 2rem;
+  font-size: 0.95rem;
+  color: #555;
+  font-style: italic;
+}
+
+.signature-block {
+  display: flex;
+  justify-content: flex-end;
+  width: 85%;
+  margin: 0 auto;
+}
+
+.signature {
+  width: 45%;
+  text-align: center;
+  font-size: 0.9rem;
+}
+
+.signature-line {
+  border: 0;
+  border-top: 1px solid var(--text-color);
+  margin-bottom: 0.5rem;
+}
+
+.signature p {
+  margin: 0;
+  line-height: 1.4;
+  font-family: var(--font-body);
+}
+
+.signature strong {
+  font-size: 1rem;
+  font-family: var(--font-heading);
+  font-weight: 700;
+}
+
+.signature {
+  position: relative;
+}
+
+.signature-image {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 20px;
+  width: 250px;
+  height: auto;
+}
+
+.signature-line {
+  margin-top: -20px;
+}
+
+.certificate-header,
+.certificate-footer {
+  flex-shrink: 0;
+}
+
+/* ====================================================================== */
+/* 5. Print-Specific Styles                                               */
+/* ====================================================================== */
+.download-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.download-btn {
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  color: white;
+  background-color: #004a99;
+  /* Blue accent color */
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.download-btn:hover {
+  background-color: #003366;
+  /* Darker blue on hover */
+}
+
+@media print {
+  .download-section {
+    display: none;
+  }
+
+  @page {
+    size: A4 landscape;
+    margin: 0;
+  }
+
+  body {
+    background-color: var(--background-color);
+    padding: 0;
+    margin: 0;
+  }
+
+  .variant-title {
+    display: none;
+  }
+
+  .certificate {
+    box-shadow: none;
+    border: none;
+    margin: 0;
+    position: relative;
+    overflow: hidden;
+    page-break-after: always;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .preview-container section:last-of-type {
+    page-break-after: avoid;
+  }
+}

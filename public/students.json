@@ -1,0 +1,38 @@
+[
+    {
+        "name": "Khorn Victor",
+        "course": "Web Design",
+        "start_date": "2024-01-15",
+        "completion_date": "2024-06-01"
+    },
+    {
+        "name": "John Doe",
+        "course": "Web Design",
+        "start_date": "2024-01-15",
+        "completion_date": "2024-06-01"
+    },
+    {
+        "name": "Jane Smith",
+        "course": "Web Design",
+        "start_date": "2024-01-15",
+        "completion_date": "2024-06-01"
+    },
+    {
+        "name": "Alice Johnson",
+        "course": "Web Design",
+        "start_date": "2024-01-15",
+        "completion_date": "2024-06-01"
+    },
+    {
+        "name": "Bob Brown",
+        "course": "Web Design",
+        "start_date": "2024-01-15",
+        "completion_date": "2024-06-01"
+    },
+    {
+        "name": "Charlie Davis",
+        "course": "Web Design",
+        "start_date": "2024-01-15",
+        "completion_date": "2024-06-01"
+    }
+]

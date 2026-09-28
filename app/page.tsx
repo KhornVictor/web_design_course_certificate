@@ -1,9 +1,10 @@
-import Image from "next/image";
+import { getCertificateData } from "@/lib/assets";
+import CertificateStudio from "@/app/components/CertificateStudio";
+
+export const dynamic = "force-dynamic";
 
 export default function Home() {
-  return (
-    <div>
-      Hello
-    </div>
-  );
+  const certificateData = getCertificateData();
+
+  return <CertificateStudio initialData={certificateData} />;
 }
