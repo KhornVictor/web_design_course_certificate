@@ -10,6 +10,7 @@ export interface CertificateConfig {
   location: string;
   start_date: string;
   end_date: string;
+  assets?: any;
 }
 
 export interface Student {
