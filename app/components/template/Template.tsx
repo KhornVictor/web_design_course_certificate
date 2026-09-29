@@ -192,7 +192,7 @@ export default function Template({
         <footer className="relative z-10 shrink-0 mt-[0.2cqw]">
           <div className="flex justify-end w-[85%] mx-auto">
             <div className="relative w-[34%] max-w-[36cqw] text-center flex flex-col items-center">
-              <div className="relative h-[6.5cqw] w-full flex items-center justify-center mb-[-0.4cqw] z-10">
+              {/* <div className="relative h-[6.5cqw] w-full flex items-center justify-center mb-[-0.4cqw] z-10">
                 {signatureSrc && (
                   <img
                     src={signatureSrc}
@@ -200,7 +200,7 @@ export default function Template({
                     className="max-h-full max-w-full object-contain filter contrast-125 select-none"
                   />
                 )}
-              </div>
+              </div> */}
 
               {/* Signature Line */}
               <div className="w-full border-0 border-t border-[#333333] mb-[0.4cqw]" />

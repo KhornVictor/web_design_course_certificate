@@ -321,7 +321,7 @@ export async function downloadCertificatePNG(
     ctx.textAlign = "center";
     ctx.fillText(signatoryName, sigCenterX, sigLineY + 1.5 * cqw + 6);
 
-    // Signatory Role
+    // Signatory Roleg
     ctx.font = `400 ${Math.round(1.3 * cqw)}px 'Times New Roman', Times, serif`;
     ctx.fillStyle = "#333333";
     ctx.textAlign = "center";
